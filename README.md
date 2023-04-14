@@ -17,13 +17,20 @@ podman network create 23cnetwork
 
 pwgen 16 1 | tr -d '\n' | podman secret create ORACLE_PWD -
 
+### Create a developer password/secret
+
+pwgen 16 1 | tr -d '\n' | podman secret create DEVVER_PWD -
+
 ### Run 23c container
 
 podman run -d \
   --name db-free \
+  --user oracle \
   --net 23cnetwork \
   --secret ORACLE_PWD,type=env \
+  --secret DEVVER_PWD,type=env \
   -v $HOME/db-free/oradata:/opt/oracle/oradata \
+  -v $HOME/db-free/dbInstallInit:/opt/oracle/scripts/setup:Z \
   database/free
 
 If you want a volume for logs, add:
