@@ -18,3 +18,10 @@ Provision all the pieces - this script does the following tasks:
 ./tearup.sh
 ```
 
+In the future if you want to spin up or down the containers just run:
+
+```sh
+podman pod stop dbfree-pod 
+podman pod start dbfree-pod 
+```
+
