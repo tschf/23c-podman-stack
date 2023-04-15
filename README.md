@@ -1,25 +1,24 @@
 # README
 
+Set up instructions:
+
+Grab the images if you don't already have them. I like to do this is an independent
+step rather than letting the container engine pull them in a "run" operation.
+
+```sh
+./images.sh
+```
+
+Provision all the pieces - this script does the following tasks:
+
+* Makes a folder in your HOME - $HOME/db-free
+* Creates 2 secrets - 1 for sys and 1 for a app dev user which I've called "devver".
+
+```sh
+./tearup.sh
+```
+
 ## Database
-
-### Install software
-
-Plugins are required to enable name resolution between containers.
-
-dnf install podman podman-plugins
-mkdir -p $HOME/db-free/oradata
-
-### Set up network
-
-podman network create 23cnetwork
-
-### Create an admin password/secret
-
-pwgen 16 1 | tr -d '\n' | podman secret create ORACLE_PWD -
-
-### Create a developer password/secret
-
-pwgen 16 1 | tr -d '\n' | podman secret create DEVVER_PWD -
 
 ### Run 23c container
 
@@ -29,7 +28,7 @@ podman run -d \
   --net 23cnetwork \
   --secret ORACLE_PWD,type=env \
   --secret DEVVER_PWD,type=env \
-  -v $HOME/db-free/oradata:/opt/oracle/oradata \
+  -v $HOME/db-free/oradata:/opt/oracle/oradata:z \
   -v $HOME/db-free/dbInstallInit:/opt/oracle/scripts/setup:Z \
   database/free
 
@@ -47,16 +46,6 @@ Once sqlplus is installed, verify connection:
 sqlplus foo/foo@db-free:1521/FREEPDB1
 
 ## ORDS
-
-### Config
-
-mkdir -p $HOME/db-free/ords_secrets
-mkdir -p $HOME/db-free/ords_config
-
-cd $HOME/db-free/ords_secrets
-nb: the connection string gets removed after the connection is established
-printf "CONN_STRING=sys/%s@db-free:1521/FREEPDB1" "$(cat $(podman secret inspect ORACLE_PWD | jq -r '.[0].Spec.Driver.Options.path')/secretsdata.json | jq -r '. | .[]' | base64 -d)" > ords_secrets/conn_string.txt
-
 ### Run ORDS
 
 podman run -d \
