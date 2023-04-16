@@ -3,8 +3,8 @@
 Grant the following to the parsing schema:
 
 ```sql
-GRANT EXECUTE DYNAMIC MLE to XYZ;
-GRANT EXECUTE ON JAVASCRIPT TO XYZ;
+GRANT EXECUTE DYNAMIC MLE to DEVVER;
+GRANT EXECUTE ON JAVASCRIPT TO DEVVER;
 ```
 
 Sample dynamic content region:
