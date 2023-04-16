@@ -8,11 +8,6 @@ mkdir -p "$basePath/dbInstallInit"
 mkdir -p "$basePath/ords_config"
 mkdir -p "$basePath/ords_secrets"
 
-podman unshare<<EOF
-cd $basePath
-chown 54321.54321 oradata
-EOF
-
 cp init/create_user.sh "$basePath/dbInstallInit"
 
 pwgen 16 1 | tr -d '\n' | podman secret create ORACLE_PWD -
@@ -40,14 +35,14 @@ podman create \
   --user oracle \
   --secret ORACLE_PWD,type=env \
   --secret DEVVER_PWD,type=env \
-  -v "$HOME/db-free/oradata:/opt/oracle/oradata:z" \
-  -v "$HOME/db-free/dbInstallInit:/opt/oracle/scripts/setup:Z" \
+  -v "$HOME/db-free/oradata:/opt/oracle/oradata:U,Z" \
+  -v "$HOME/db-free/dbInstallInit:/opt/oracle/scripts/setup:U,Z" \
   database/free
 
 podman create \
   --name ords \
   --pod dbfree-pod \
-  -v "$HOME/db-free/ords_secrets/:/opt/oracle/variables:z" \
+  -v "$HOME/db-free/ords_secrets/:/opt/oracle/variables:Z" \
   -v "$HOME/db-free/ords_config/:/etc/ords/config:Z" \
   --restart on-failure:200 \
   container-registry.oracle.com/database/ords:23.1.0
