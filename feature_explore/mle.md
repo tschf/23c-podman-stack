@@ -7,6 +7,9 @@ GRANT EXECUTE DYNAMIC MLE to DEVVER;
 GRANT EXECUTE ON JAVASCRIPT TO DEVVER;
 ```
 
+note: I didn't manage to find this in the documentation but found from the following
+stack overflow post: https://stackoverflow.com/questions/69829993/cant-enable-javascript-mle-on-apex
+
 Sample dynamic content region:
 
 ```js
