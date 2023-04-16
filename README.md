@@ -1,5 +1,7 @@
 # README
 
+[23c Docs Home](https://docs.oracle.com/en/database/oracle/oracle-database/23/index.html)
+
 ## Pre-requisites
 
 This assumes you're on linux - some of the scripts might not work for you.
