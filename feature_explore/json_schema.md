@@ -67,4 +67,85 @@ end;
 /
 ```
 
-## Generate schema
+## Schema Design
+
+You can use the `json_dataguide` SQL function on order to get a starting point
+for your schema. The docs highlight that using this structure usually isn't suitable
+for using as your schema, but serves as a good mechanism to get your starting point.
+
+```sql
+select  
+  json_dataguide(
+    '{
+  "name": "Bob",
+  "on_vacation": false,
+  "salary": 200.50,
+  "manager": "KING"
+}', 
+    dbms_json.format_hierarchical, 
+    dbms_json.pretty
+  )
+from 
+  emp_schema;
+```
+
+Note that this function includes some Oracle specific fields that describe the data.
+These being with `o:` and one example is `o:length` which describes the length
+of a given field.
+
+With our structure, removing the `o:` fields, we end up with the following:
+
+```json
+{
+  "type" : "object",
+  "properties" :
+  {
+    "name" : {"type" : "string"},
+    "salary" : {"type" : "number"},
+    "manager" : {"type" : "string"},
+    "on_vacation" : {"type" : "boolean"}
+  }
+}
+```
+
+So applying this to a table to test:
+
+```sql
+create table emp_recs (
+  jdoc json validate '{
+  "type" : "object",
+  "properties" :
+  {
+    "name" : {"type" : "string"},
+    "salary" : {"type" : "number"},
+    "manager" : {"type" : "string"},
+    "on_vacation" : {"type" : "boolean"}
+  }
+}'
+);
+```
+
+Now we can load data ensuring it conforms to our standard. To trigger a failure
+we can specify a non boolean in the "on_vacation" field and you will expect to get
+a `ORA-40875: JSON schema validation error`.
+
+To extend and make this schema more useful, a couple of things you might like to change
+is to require certain fields, and prevent additional ones. We tweak our schema to
+the following:
+
+```json
+{
+  "type" : "object",
+  "properties" :
+  {
+    "name" : {"type" : "string"},
+    "salary" : {"type" : "number"},
+    "manager" : {"type" : "string"},
+    "on_vacation" : {"type" : "boolean"}
+  },
+  "required": ["name", "manager"],
+  "additionalProperties": false
+}
+```
+
+The full spec about schema configuration options can be found here: <https://json-schema.org/understanding-json-schema/>.
