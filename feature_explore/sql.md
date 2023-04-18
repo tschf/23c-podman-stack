@@ -1,6 +1,6 @@
 # SQL
 
-New SQL functionalities.
+New SQL functionalities. Docs linke: <https://docs.oracle.com/en/database/oracle/oracle-database/23/nfcoa/application-development.html#GUID-B0A583CD-D4ED-472D-9F82-C6940E7ED745>
 
 ## values clause
 
