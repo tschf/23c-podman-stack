@@ -104,3 +104,36 @@ where empno in (
   where dep.dnum = 20
 );
 ```
+
+## Boolean Data Type
+
+There is a new SQL boolean data type.
+
+```sql
+create table bools (
+  is_ready_char varchar2(5),
+  is_ready_bool boolean
+);
+
+insert into bools values ('true', true);
+insert into bools values ('false', false);
+insert into bools values ('0', 0);
+insert into bools values ('1', 1);
+insert into bools values ('Y', 'Y');
+insert into bools values ('N', 'N');
+insert into bools values ('55', 55);
+insert into bools values ('-12', -12);
+insert into bools values ('Y', 'Y');
+
+IS_RE IS_READY_BO
+----- -----------
+true  TRUE
+false FALSE
+0     FALSE
+1     TRUE
+Y     TRUE
+N     FALSE
+55    TRUE
+-12   TRUE
+Y     TRUE
+```
