@@ -45,7 +45,7 @@ podman create \
   -v "$HOME/db-free/ords_secrets/:/opt/oracle/variables:Z" \
   -v "$HOME/db-free/ords_config/:/etc/ords/config:Z" \
   --restart on-failure:200 \
-  container-registry.oracle.com/database/ords:23.1.0
+  container-registry.oracle.com/database/ords:23.1.2
 
 podman container start db
 
