@@ -3,12 +3,7 @@ set -e
 
 export basePath="$HOME/db-free"
 
-mkdir -p "$basePath/oradata"
-mkdir -p "$basePath/dbInstallInit"
-mkdir -p "$basePath/ords_config"
 mkdir -p "$basePath/ords_secrets"
-
-cp init/create_user.sh "$basePath/dbInstallInit"
 
 pwgen 16 1 | tr -d '\n' | podman secret create ORACLE_PWD -
 
@@ -23,11 +18,12 @@ secretDecoded=$(jq -r ".[\"$secretId\"]" < "$secretFilePath" | base64 -d)
 # persists between reboots of the pod-containers.
 printf "CONN_STRING=sys/%s@db:1521/FREEPDB1" "$secretDecoded" > "$HOME/db-free/ords_secrets/conn_string.txt"
 
-# Custom script configured to make a new user in the DB with the following password.
-# The user is `devver` and given the new DB_DEVELOPER_ROLE.
+# Expose an environment variable to use to create an application development schema
 pwgen 16 1 | tr -d '\n' | podman secret create DEVVER_PWD -
-
 podman pod create -p 8181:8181 dbfree-pod
+
+podman volume create oradata
+podman volume create ordsconfig
 
 podman create \
   --name db \
@@ -35,15 +31,14 @@ podman create \
   --user oracle \
   --secret ORACLE_PWD,type=env \
   --secret DEVVER_PWD,type=env \
-  -v "$HOME/db-free/oradata:/opt/oracle/oradata:U,Z" \
-  -v "$HOME/db-free/dbInstallInit:/opt/oracle/scripts/setup:U,Z" \
+  -v "oradata:/opt/oracle/oradata" \
   database/free
 
 podman create \
   --name ords \
   --pod dbfree-pod \
   -v "$HOME/db-free/ords_secrets/:/opt/oracle/variables:Z" \
-  -v "$HOME/db-free/ords_config/:/etc/ords/config:Z" \
+  -v "ordsconfig:/etc/ords/config" \
   --restart on-failure:200 \
   container-registry.oracle.com/database/ords:23.2.0
 
@@ -61,7 +56,13 @@ do
 
 done
 
-echo "Database healthy. Proceeding to start ORDS"
+echo "Database healthy."
+echo "Create app dev user"
+podman cp init/create_user.sh db:/tmp/create_user.sh
+podman exec db /tmp/create_user.sh
+podman exec db rm /tmp/create_user.sh
+
+echo "Proceeding with ORDS, this will also kick the APEX installation"
 
 podman pod start dbfree-pod
 podman exec -it ords tail -f /tmp/install_container.log
