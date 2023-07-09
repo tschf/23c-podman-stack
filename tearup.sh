@@ -86,9 +86,13 @@ podman exec ords tail -f /tmp/install_container.log
 set -e
 podman exec ords rm /tmp/log_watcher.sh
 
-echo "Create APEX Workspace"
+echo "Create APEX Workspace and REST enable schema"
 podman exec -it db bash -c 'sqlplus sys/$ORACLE_PWD@localhost:1521/freepdb1 as sysdba'<<EOF
 begin
+  ords_admin.enable_schema(
+    p_schema => 'DEVVER'
+  );
+
   apex_instance_admin.add_workspace(
     p_workspace_id => 10000,
     p_workspace => 'APP_DEV',
