@@ -58,7 +58,7 @@ done
 
 echo "Database healthy."
 echo "Create app dev user"
-podman cp init/create_user.sh db:/tmp/create_user.sh
+podman cp scripts/create_user.sh db:/tmp/create_user.sh
 podman exec db /tmp/create_user.sh
 podman exec db rm /tmp/create_user.sh
 
