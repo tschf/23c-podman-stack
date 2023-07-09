@@ -5,21 +5,28 @@ export basePath="$HOME/db-free"
 
 mkdir -p "$basePath/ords_secrets"
 
+# Create two random passwords. One for sys/dba account; And another for an initial
+# app development schema "devver". Workspace (APP_DEV) will be created and assigned
+# a devver user wit hthe same password
 pwgen 16 1 | tr -d '\n' | podman secret create ORACLE_PWD -
+pwgen 16 1 | tr -d '\n' | podman secret create DEVVER_PWD -
 
-secretInfo=$(podman secret inspect ORACLE_PWD)
-secretId=$(echo "$secretInfo" | jq -r '.[0].ID')
-secretFilePath=$(echo "$secretInfo" | jq -r '.[0].Spec.Driver.Options.path')/secretsdata.json
-secretDecoded=$(jq -r ".[\"$secretId\"]" < "$secretFilePath" | base64 -d)
+oraclePwdSecretInfo=$(podman secret inspect ORACLE_PWD)
+oraclePwdSecretId=$(echo "$oraclePwdSecretInfo" | jq -r '.[0].ID')
+oraclePwdSecretFilePath=$(echo "$oraclePwdSecretInfo" | jq -r '.[0].Spec.Driver.Options.path')/secretsdata.json
+oraclePwdSecretDecoded=$(jq -r ".[\"$oraclePwdSecretId\"]" < "$oraclePwdSecretFilePath" | base64 -d)
+
+devverPwdSecretInfo=$(podman secret inspect DEVVER_PWD)
+devverPwdSecretId=$(echo "$devverPwdSecretInfo" | jq -r '.[0].ID')
+devverPwdSecretFilePath=$(echo "$devverPwdSecretInfo" | jq -r '.[0].Spec.Driver.Options.path')/secretsdata.json
+devverPwdSecretDecoded=$(jq -r ".[\"$devverPwdSecretId\"]" < "$devverPwdSecretFilePath" | base64 -d)
 
 # This path db-free/ords_secrets is a volume passed to the ORDS container and is
 # used only first when establishing the connection and then subsequently removed.
 # It's important to also map the /etc/ords/config volume so the connection info
 # persists between reboots of the pod-containers.
-printf "CONN_STRING=sys/%s@db:1521/FREEPDB1" "$secretDecoded" > "$HOME/db-free/ords_secrets/conn_string.txt"
+printf "CONN_STRING=sys/%s@db:1521/FREEPDB1" "$oraclePwdSecretDecoded" > "$HOME/db-free/ords_secrets/conn_string.txt"
 
-# Expose an environment variable to use to create an application development schema
-pwgen 16 1 | tr -d '\n' | podman secret create DEVVER_PWD -
 podman pod create -p 8181:8181 dbfree-pod
 
 podman volume create oradata
@@ -79,4 +86,33 @@ podman exec ords tail -f /tmp/install_container.log
 set -e
 podman exec ords rm /tmp/log_watcher.sh
 
-# TODO: Set up a an APEX workspace
+echo "Create APEX Workspace"
+podman exec -it db bash -c 'sqlplus sys/$ORACLE_PWD@localhost:1521/freepdb1 as sysdba'<<EOF
+begin
+  apex_instance_admin.add_workspace(
+    p_workspace_id => 10000,
+    p_workspace => 'APP_DEV',
+    p_primary_schema => 'DEVVER'
+  );
+
+  apex_util.set_workspace('APP_DEV');
+
+  apex_util.create_user(
+    p_user_name => 'DEVVER',
+    p_web_password => '$devverPwdSecretDecoded',
+    p_developer_privs => 'ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:SQL',
+    p_change_password_on_first_use => 'N'
+  );
+end;
+/
+
+exit
+EOF
+
+echo "**Workspace info**"
+echo "WORKSPACE: APP_DEV"
+echo "USER: DEVVER"
+echo "PASSWORD: $devverPwdSecretDecoded"
+
+echo ""
+echo "All Done"
