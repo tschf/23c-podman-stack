@@ -1,13 +1,9 @@
 #!/bin/bash
 set -e
 
-export basePath="$HOME/db-free"
-
-mkdir -p "$basePath/ords_secrets"
-
 # Create two random passwords. One for sys/dba account; And another for an initial
 # app development schema "devver". Workspace (APP_DEV) will be created and assigned
-# a devver user wit hthe same password
+# a devver user with the same password
 pwgen 16 1 | tr -d '\n' | podman secret create ORACLE_PWD -
 pwgen 16 1 | tr -d '\n' | podman secret create DEVVER_PWD -
 
@@ -25,7 +21,7 @@ devverPwdSecretDecoded=$(jq -r ".[\"$devverPwdSecretId\"]" < "$devverPwdSecretFi
 # used only first when establishing the connection and then subsequently removed.
 # It's important to also map the /etc/ords/config volume so the connection info
 # persists between reboots of the pod-containers.
-printf "CONN_STRING=sys/%s@db:1521/FREEPDB1" "$oraclePwdSecretDecoded" > "$HOME/db-free/ords_secrets/conn_string.txt"
+printf "CONN_STRING=sys/%s@db:1521/FREEPDB1" "$oraclePwdSecretDecoded" > conn_string.txt
 
 podman pod create -p 8181:8181 dbfree-pod
 
@@ -44,10 +40,12 @@ podman create \
 podman create \
   --name ords \
   --pod dbfree-pod \
-  -v "$HOME/db-free/ords_secrets/:/opt/oracle/variables:Z" \
   -v "ordsconfig:/etc/ords/config" \
   --restart on-failure:200 \
   container-registry.oracle.com/database/ords:23.2.0
+
+podman cp conn_string.txt ords:/opt/oracle/variables/conn_string.txt
+rm conn_string.txt
 
 podman container start db
 
