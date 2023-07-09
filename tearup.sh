@@ -44,16 +44,14 @@ podman create \
 
 podman container start db
 
-echo "Waiting for DB to become healthy before staring ORDS"
+echo "Waiting for DB to become healthy before staring ORDS. We will keep checking every 30secs"
 
 healthStatus=$(curl -s --unix-socket "$XDG_RUNTIME_DIR/podman/podman.sock" http://localhost/v4.0.0/libpod/containers/db/json | jq -r '.State.Health.Status')
 while [[ "$healthStatus" != "healthy" ]]
 do
-
+  sleep 30s
   healthStatus=$(curl -s --unix-socket "$XDG_RUNTIME_DIR/podman/podman.sock" http://localhost/v4.0.0/libpod/containers/db/json | jq -r '.State.Health.Status')
   echo "Current status: $healthStatus"
-  sleep 30s
-
 done
 
 echo "Database healthy."
@@ -62,7 +60,23 @@ podman cp scripts/create_user.sh db:/tmp/create_user.sh
 podman exec db /tmp/create_user.sh
 podman exec db rm /tmp/create_user.sh
 
-echo "Proceeding with ORDS, this will also kick the APEX installation"
+echo "Starting ORDS container. On first run, this installs APEX"
 
 podman pod start dbfree-pod
-podman exec -it ords tail -f /tmp/install_container.log
+
+# Watch the logs. I set up a script to monitor when no new content comes through
+# in a time threshold. Once no new content is read it is set up to kill the `tail`
+# process. I set it up this way (rather than just doing it all in log_watcher) as
+# I wanted the log to stream in realtime.
+podman cp scripts/log_watcher.sh ords:/tmp/log_watcher.sh
+
+# We need to allow non-zero exit codes since we force kill the `tail` command
+# which results in a non-zero exit code thus killing subsequent script lines.
+set +e
+podman exec ords /tmp/log_watcher.sh &
+
+podman exec ords tail -f /tmp/install_container.log
+set -e
+podman exec ords rm /tmp/log_watcher.sh
+
+# TODO: Set up a an APEX workspace
