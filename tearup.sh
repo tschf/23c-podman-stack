@@ -27,6 +27,8 @@ podman pod create -p 8181:8181 -p 1521:1521 dbfree-pod
 
 podman volume create oradata
 podman volume create ordsconfig
+# ordsinit, for scripts that run before the container starts i.e. on boot
+podman volume create ordsinit
 
 podman create \
   --name db \
@@ -41,11 +43,14 @@ podman create \
   --name ords \
   --pod dbfree-pod \
   -v "ordsconfig:/etc/ords/config" \
+  -v "ordsinit:/ords-entrypoint.d" \
   --restart on-failure:200 \
   container-registry.oracle.com/database/ords:23.2.0
 
 podman cp conn_string.txt ords:/opt/oracle/variables/conn_string.txt
 rm conn_string.txt
+
+podman cp scripts/custom_alias.sh ords:/ords-entrypoint.d
 
 podman container start db
 
