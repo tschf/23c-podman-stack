@@ -51,6 +51,7 @@ podman cp conn_string.txt ords:/opt/oracle/variables/conn_string.txt
 rm conn_string.txt
 
 podman cp scripts/custom_alias.sh ords:/ords-entrypoint.d
+podman cp scripts/ords_config.sh ords:/ords-entrypoint.d
 
 podman container start db
 
