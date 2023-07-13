@@ -59,20 +59,20 @@ podman container start db
 echo "Waiting for DB to become healthy before staring ORDS. We will keep checking every 30secs"
 
 # healthStatus=$(curl -s --unix-socket "$XDG_RUNTIME_DIR/podman/podman.sock" http://localhost/v4.0.0/libpod/containers/db/json | jq -r '.State.Health.Status')
-healthStatus=$(podman inspect db | jq -r '.[0].State.Health.Status')
-while [[ "$healthStatus" != "healthy" ]]
-do
-  sleep 30s
-  healthStatus=$(podman inspect db | jq -r '.[0].State.Health.Status')
-  # healthStatus=$(curl -s --unix-socket "$XDG_RUNTIME_DIR/podman/podman.sock" http://localhost/v4.0.0/libpod/containers/db/json | jq -r '.State.Health.Status')
-  echo "Current status: $healthStatus"
-done
+# healthStatus=$(podman inspect db | jq -r '.[0].State.Health.Status')
+# while [[ "$healthStatus" != "healthy" ]]
+# do
+#   sleep 30s
+#   healthStatus=$(podman inspect db | jq -r '.[0].State.Health.Status')
+#   # healthStatus=$(curl -s --unix-socket "$XDG_RUNTIME_DIR/podman/podman.sock" http://localhost/v4.0.0/libpod/containers/db/json | jq -r '.State.Health.Status')
+#   echo "Current status: $healthStatus"
+# done
 
-echo "Database healthy."
-echo "Create app dev user"
-podman cp scripts/create_user.sh db:/tmp/create_user.sh
-podman exec db /tmp/create_user.sh
-podman exec db rm /tmp/create_user.sh
+# echo "Database healthy."
+# echo "Create app dev user"
+# podman cp scripts/create_user.sh db:/tmp/create_user.sh
+# podman exec db /tmp/create_user.sh
+# podman exec db rm /tmp/create_user.sh
 
 echo "Starting ORDS container. On first run, this installs APEX"
 
