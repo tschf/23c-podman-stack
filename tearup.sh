@@ -44,7 +44,6 @@ podman create \
   --pod dbfree-pod \
   -v "ordsconfig:/etc/ords/config" \
   -v "ordsinit:/ords-entrypoint.d" \
-  -e "IGNORE_APEX=TRUE" \
   --restart on-failure:200 \
   container-registry.oracle.com/database/ords:23.2.0
 
