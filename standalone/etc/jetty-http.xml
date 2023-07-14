@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure.dtd">
+<Configure id="Server" class="org.eclipse.jetty.server.Server">
+    <Ref id="Handlers">
+      <Call name="addHandler">
+        <Arg>
+          <!-- Docs link for specifying format of the access log: https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/23.2/ordig/miscellaneous-configuration-options-of-ORDS.html#GUID-A3798C5A-C6C6-40A2-826F-CE1CF0B8DDE2 -->
+          <!-- Format string/tokens as specified in: https://eclipse.dev/jetty/javadoc/jetty-9/org/eclipse/jetty/server/CustomRequestLog.html -->
+          <New id="RequestLog" class="org.eclipse.jetty.server.handler.RequestLogHandler">
+            <Set name="requestLog">
+              <New id="RequestLogImpl" class="org.eclipse.jetty.server.CustomRequestLog">
+                <Arg>/var/log/ords-access.log</Arg>
+                <Arg>%{remote}a - %u %t "%r" %s %O "%{Referer}i" "%{User-Agent}i"</Arg>
+              </New>
+            </Set>
+          </New>
+        </Arg>
+      </Call>
+    </Ref>
+</Configure>

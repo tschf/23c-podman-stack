@@ -44,6 +44,7 @@ podman create \
   --pod dbfree-pod \
   -v "ordsconfig:/etc/ords/config" \
   -v "ordsinit:/ords-entrypoint.d" \
+  -e "IGNORE_APEX=TRUE" \
   --restart on-failure:200 \
   container-registry.oracle.com/database/ords:23.2.0
 
@@ -57,7 +58,7 @@ podman container start db
 
 echo "Waiting for DB to become healthy before staring ORDS. We will keep checking every 30secs"
 
-# healthStatus=$(curl -s --unix-socket "$XDG_RUNTIME_DIR/podman/podman.sock" http://localhost/v4.0.0/libpod/containers/db/json | jq -r '.State.Health.Status')
+healthStatus=$(curl -s --unix-socket "$XDG_RUNTIME_DIR/podman/podman.sock" http://localhost/v4.0.0/libpod/containers/db/json | jq -r '.State.Health.Status')
 healthStatus=$(podman inspect db | jq -r '.[0].State.Health.Status')
 while [[ "$healthStatus" != "healthy" ]]
 do
@@ -76,6 +77,9 @@ podman exec db rm /tmp/create_user.sh
 echo "Starting ORDS container. On first run, this installs APEX"
 
 podman pod start dbfree-pod
+
+podman exec ords mkdir -p /etc/ords/config/global
+podman cp standalone ords:/etc/ords/config/global/standalone
 
 # Watch the logs. I set up a script to monitor when no new content comes through
 # in a time threshold. Once no new content is read it is set up to kill the `tail`
