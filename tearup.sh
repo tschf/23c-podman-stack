@@ -37,7 +37,7 @@ podman create \
   --secret ORACLE_PWD,type=env \
   --secret DEVVER_PWD,type=env \
   -v "oradata:/opt/oracle/oradata" \
-  database/free
+  container-registry.oracle.com/database/free
 
 podman create \
   --name ords \
@@ -45,7 +45,7 @@ podman create \
   -v "ordsconfig:/etc/ords/config" \
   -v "ordsinit:/ords-entrypoint.d" \
   --restart on-failure:200 \
-  container-registry.oracle.com/database/ords:23.2.0
+  container-registry.oracle.com/database/ords:23.4.0
 
 podman cp conn_string.txt ords:/opt/oracle/variables/conn_string.txt
 rm conn_string.txt
