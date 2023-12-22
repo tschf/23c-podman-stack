@@ -78,7 +78,7 @@ echo "Starting ORDS container. On first run, this installs APEX"
 podman pod start dbfree-pod
 
 podman exec ords mkdir -p /etc/ords/config/global
-podman cp standalone ords:/etc/ords/config/global/standalone
+# podman cp standalone ords:/etc/ords/config/global/standalone
 
 # Wait for the ords process to exist before stopping the tail process
 podman cp scripts/process_waiter.sh ords:/tmp/process_waiter.sh
