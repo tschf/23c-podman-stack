@@ -80,20 +80,19 @@ podman pod start dbfree-pod
 podman exec ords mkdir -p /etc/ords/config/global
 podman cp standalone ords:/etc/ords/config/global/standalone
 
-# Watch the logs. I set up a script to monitor when no new content comes through
-# in a time threshold. Once no new content is read it is set up to kill the `tail`
-# process. I set it up this way (rather than just doing it all in log_watcher) as
-# I wanted the log to stream in realtime.
-podman cp scripts/log_watcher.sh ords:/tmp/log_watcher.sh
+# Wait for the ords process to exist before stopping the tail process
+podman cp scripts/process_waiter.sh ords:/tmp/process_waiter.sh
 
 # We need to allow non-zero exit codes since we force kill the `tail` command
 # which results in a non-zero exit code thus killing subsequent script lines.
 set +e
-podman exec ords /tmp/log_watcher.sh &
+podman exec ords /tmp/process_waiter.sh &
 
 podman exec ords tail -f /tmp/install_container.log
 set -e
-podman exec ords rm /tmp/log_watcher.sh
+# We don't need that script beyond the initial start up so remove it from the
+# container.
+podman exec ords rm /tmp/process_waiter.sh
 
 echo "Create APEX Workspace and REST enable schema"
 podman exec -it db bash -c 'sqlplus sys/$ORACLE_PWD@localhost:1521/freepdb1 as sysdba'<<EOF
