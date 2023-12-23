@@ -169,10 +169,10 @@ end;
 exit
 EOF
 
-echo "**Workspace info**"
-echo "WORKSPACE: APP_DEV"
-echo "USER: DEVVER"
-echo "PASSWORD: $devverPwdSecretDecoded"
+echo "**Workspace info**" | tee connection_info.txt
+echo "WORKSPACE: APP_DEV" | tee --append connection_info.txt
+echo "USER: DEVVER" | tee --append connection_info.txt
+echo "PASSWORD: $devverPwdSecretDecoded" | tee --append connection_info.txt
 
 echo ""
 echo "All Done"
