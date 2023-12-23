@@ -10,9 +10,5 @@ do
   sleep 1s
 done
 
-# After ords startup it has to install some things - which doesn't take long. So
-# give half a minute before killing the tail process
-sleep 30s
-
 tailPid=$(pgrep tail)
 kill -9 "$tailPid"
