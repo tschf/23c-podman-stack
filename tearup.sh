@@ -94,6 +94,54 @@ set -e
 # container.
 podman exec ords rm /tmp/process_waiter.sh
 
+echo "Waiting for ORDS to be fully available"
+podman exec -it db bash -c 'sqlplus sys/$ORACLE_PWD@localhost:1521/freepdb1 as sysdba'<<EOF
+set serveroutput on
+
+declare
+  l_ords_schema_version_table_count number;
+begin
+
+  -- First wait for the table to exist
+  loop
+    select count(1)
+    into l_ords_schema_version_table_count
+    from all_objects
+    where owner = 'ORDS_METADATA'
+    and object_name = 'ORDS_SCHEMA_VERSION';
+
+    exit when l_ords_schema_version_table_count = 1;
+    dbms_session.sleep(1);
+  end loop;
+end;
+/
+
+declare
+  l_install_status ords_metadata.ords_schema_version.status%type;
+begin
+  -- Wait for status to become available
+  loop
+    begin
+      select status
+      into l_install_status
+      from ords_metadata.ords_schema_version
+      order by version desc
+      fetch first row only;
+    -- The record hasn't been created yet. That's ok. lets wait a second
+    exception when no_data_found then null;
+    end;
+
+    exit when l_install_status = 'AVAILABLE';
+
+    dbms_session.sleep(1);
+  end loop;
+end;
+/
+exit
+EOF
+
+# Now that we know ORDS is available, set up a schema to get going with and REST
+# enable it so SQLDevWeb can be used.
 echo "Create APEX Workspace and REST enable schema"
 podman exec -it db bash -c 'sqlplus sys/$ORACLE_PWD@localhost:1521/freepdb1 as sysdba'<<EOF
 begin
