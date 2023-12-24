@@ -8,3 +8,4 @@ podman volume rm ordsinit
 
 podman secret rm ORACLE_PWD
 podman secret rm DEVVER_PWD
+podman secret rm EXPORTER_PWD
