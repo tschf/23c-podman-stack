@@ -23,7 +23,7 @@ devverPwdSecretDecoded=$(jq -r ".[\"$devverPwdSecretId\"]" < "$devverPwdSecretFi
 # persists between reboots of the pod-containers.
 printf "CONN_STRING=sys/%s@db:1521/FREEPDB1" "$oraclePwdSecretDecoded" > conn_string.txt
 
-podman pod create -p 8181:8181 -p 1521:1521 dbfree-pod
+podman pod create -p 8181:8181 -p 1521:1521 -p 9161:9161 dbfree-pod
 
 podman volume create oradata
 podman volume create ordsconfig
