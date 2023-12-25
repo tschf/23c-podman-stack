@@ -25,6 +25,14 @@ podman create \
   -e DB_CONNECT_STRING=db:1521/freepdb1 \
   container-registry.oracle.com/database/observability-exporter:1.1.1
 
+podman create \
+  --name prometheus \
+  --pod dbfree-pod \
+  -v "$(pwd)"/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml \
+  quay.io/prometheus/prometheus:latest
+
 podman container start exporter
+podman container start prometheus
 
 echo "Oracle metrics data exporter is set up and running at http://localhost:9161/metrics"
+echo "Prometheus is up an running at http://localhost:9090"
