@@ -14,6 +14,7 @@ podman exec -it db bash<<EOF
   sqlplus sys/\$ORACLE_PWD@localhost:1521/freepdb1 as sysdba<<EOF2
   create user exporter identified by $exporter_pwd_secret_decoded;
   grant select_catalog_role to exporter;
+  grant apex_administrator_read_role to exporter;
   grant create session to exporter;
 EOF2
 exit
@@ -25,6 +26,8 @@ podman create \
   -e DB_USERNAME=exporter \
   --secret EXPORTER_PWD,type=env,target=DB_PASSWORD \
   -e DB_CONNECT_STRING=db:1521/freepdb1 \
+  -e CUSTOM_METRICS=/apex_metrics.toml \
+  -v "$(pwd)"/monitoring/apex_metrics.toml:/apex_metrics.toml \
   container-registry.oracle.com/database/observability-exporter:1.1.1
 
 podman create \

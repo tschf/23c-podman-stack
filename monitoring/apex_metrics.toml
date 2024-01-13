@@ -1,0 +1,40 @@
+[[metric]]
+context = "apex"
+metricsdesc = { session_count = "Total number of un-expired sessions", distinct_user_session_count = "Unique user count from un-expired sessions" }
+request = """
+select count(1) session_count, count(distinct user_name) distinct_user_session_count
+from apex_workspace_sessions
+where session_life_timeout_on > sysdate
+"""
+
+[[metric]]
+context = "apex"
+tags = [ "application_id" ]
+metricsdesc = { average_elapsed_time = "Average elapsed time across all pages in the application" }
+request = """
+select application_id, avg(elapsed_time) average_elapsed_time
+from apex_workspace_activity_log
+group by application_id
+"""
+
+[[metric]]
+context = "apex"
+metricsdesc = { auth_failure_count = "Bad login attempts in the last hour" }
+request = """
+select count(1) auth_failure_count
+from apex_workspace_access_log
+where access_date > sysdate - interval '1' hour
+and authentication_result != 'AUTH_SUCCESS'
+"""
+
+[[metric]]
+context = "apex"
+metricsdesc = { error_count = "Application errors that have occurred in the last hour" }
+request = """
+select count(1) error_count
+from apex_workspace_activity_log
+where error_message is not null
+-- login failures handled in another metric, so ignore those.
+and error_message not like 'Invalid Login Credentials%'
+and view_date > sysdate - interval '1' hour
+"""
