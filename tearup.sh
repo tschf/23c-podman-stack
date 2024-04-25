@@ -149,6 +149,8 @@ begin
     p_schema => 'DEVVER'
   );
 
+  apex_instance_admin.set_parameter('WALLET_PATH', 'system:');
+
   apex_instance_admin.add_workspace(
     p_workspace_id => 10000,
     p_workspace => 'APP_DEV',
