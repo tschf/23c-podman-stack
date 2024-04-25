@@ -73,11 +73,6 @@ podman cp scripts/create_user.sh db:/tmp/create_user.sh
 podman exec db /tmp/create_user.sh
 podman exec db rm /tmp/create_user.sh
 
-echo "Set up acl"
-podman cp scripts/apex_acl.sh db:/tmp/apex_acl.sh
-podman exec db /tmp/apex_acl.sh
-podman exec db rm /tmp/apex_acl.sh
-
 echo "Starting ORDS container. On first run, this installs APEX"
 
 podman pod start dbfree-pod
@@ -167,6 +162,20 @@ begin
     p_web_password => '$devverPwdSecretDecoded',
     p_developer_privs => 'ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:SQL',
     p_change_password_on_first_use => 'N'
+  );
+end;
+/
+
+PRO Also set up ACL
+begin
+  dbms_network_acl_admin.append_host_ace(
+    host => '*',
+    ace =>
+      xs\$ace_type(
+        privilege_list => xs\$name_list('CONNECT','RESOLVE','HTTP'),
+        principal_name => apex_application.g_flow_schema_owner,
+        principal_type=> xs_acl.ptype_db
+      )
   );
 end;
 /
