@@ -73,6 +73,11 @@ podman cp scripts/create_user.sh db:/tmp/create_user.sh
 podman exec db /tmp/create_user.sh
 podman exec db rm /tmp/create_user.sh
 
+echo "Set up acl"
+podman cp scripts/acl.sh db:/tmp/apex_acl.sh
+podman exec db /tmp/apex_acl.sh
+podman exec db rm /tmp/apex_acl.sh
+
 echo "Starting ORDS container. On first run, this installs APEX"
 
 podman pod start dbfree-pod
