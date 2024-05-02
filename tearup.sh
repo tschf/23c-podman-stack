@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Make sure we have the latest versions
+./images.sh
+
 # Create two random passwords. One for sys/dba account; And another for an initial
 # app development schema "devver". Workspace (APP_DEV) will be created and assigned
 # a devver user with the same password
@@ -45,7 +48,7 @@ podman create \
   -v "ordsconfig:/etc/ords/config" \
   -v "ordsinit:/ords-entrypoint.d" \
   --restart on-failure:200 \
-  container-registry.oracle.com/database/ords:23.4.0
+  container-registry.oracle.com/database/ords
 
 podman cp conn_string.txt ords:/opt/oracle/variables/conn_string.txt
 rm conn_string.txt
