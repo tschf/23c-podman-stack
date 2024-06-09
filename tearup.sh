@@ -9,6 +9,7 @@ set -e
 # a devver user with the same password
 pwgen 16 1 | tr -d '\n' | podman secret create ORACLE_PWD -
 pwgen 16 1 | tr -d '\n' | podman secret create DEVVER_PWD -
+pwgen 16 1 | tr -d '\n' | podman secret create KEYSTORE_PWD -
 
 oraclePwdSecretInfo=$(podman secret inspect ORACLE_PWD)
 oraclePwdSecretId=$(echo "$oraclePwdSecretInfo" | jq -r '.[0].ID')
@@ -39,6 +40,7 @@ podman create \
   --user oracle \
   --secret ORACLE_PWD,type=env \
   --secret DEVVER_PWD,type=env \
+  --secret KEYSTORE_PWD,type=env \
   -v "oradata:/opt/oracle/oradata" \
   container-registry.oracle.com/database/free
 
@@ -58,22 +60,27 @@ podman cp scripts/ords_config.sh ords:/ords-entrypoint.d
 
 podman container start db
 
-echo "Waiting for DB to become healthy before staring ORDS. We will keep checking every 30secs"
+echo "Waiting for DB to become healthy before staring ORDS."
 
 healthStatus=$(curl -s --unix-socket "$XDG_RUNTIME_DIR/podman/podman.sock" http://localhost/v4.0.0/libpod/containers/db/json | jq -r '.State.Health.Status')
 healthStatus=$(podman inspect db --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}")
 while [[ "$healthStatus" != "healthy" ]]
 do
-  sleep 30s
+  sleep 1s
   healthStatus=$(podman inspect db --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}")
   # healthStatus=$(curl -s --unix-socket "$XDG_RUNTIME_DIR/podman/podman.sock" http://localhost/v4.0.0/libpod/containers/db/json | jq -r '.State.Health.Status')
-  echo "Current status: $healthStatus"
 done
 
 echo "Database healthy."
-echo "Create app dev user"
+podman cp scripts/configure_wallet.sh db:/tmp/configure_wallet.sh
 podman cp scripts/create_user.sh db:/tmp/create_user.sh
+
+echo "Configure wallet for TDE"
+podman exec db /tmp/configure_wallet.sh
+
+echo "Create app dev user"
 podman exec db /tmp/create_user.sh
+podman exec db rm /tmp/configure_wallet.sh
 podman exec db rm /tmp/create_user.sh
 
 echo "Starting ORDS container. On first run, this installs APEX"
