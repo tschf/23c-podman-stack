@@ -9,6 +9,7 @@ set -e
 # a devver user with the same password
 pwgen 16 1 | tr -d '\n' | podman secret create ORACLE_PWD -
 pwgen 16 1 | tr -d '\n' | podman secret create DEVVER_PWD -
+pwgen 16 1 | tr -d '\n' | podman secret create KEYSTORE_PWD -
 
 oraclePwdSecretInfo=$(podman secret inspect ORACLE_PWD)
 oraclePwdSecretId=$(echo "$oraclePwdSecretInfo" | jq -r '.[0].ID')
@@ -39,6 +40,7 @@ podman create \
   --user oracle \
   --secret ORACLE_PWD,type=env \
   --secret DEVVER_PWD,type=env \
+  --secret KEYSTORE_PWD,type=env \
   -v "oradata:/opt/oracle/oradata" \
   container-registry.oracle.com/database/free
 
