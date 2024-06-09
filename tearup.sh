@@ -2,7 +2,7 @@
 set -e
 
 # Make sure we have the latest versions
-# ./images.sh
+./images.sh
 
 # Create two random passwords. One for sys/dba account; And another for an initial
 # app development schema "devver". Workspace (APP_DEV) will be created and assigned
