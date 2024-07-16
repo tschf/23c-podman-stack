@@ -73,6 +73,7 @@ done
 
 echo "Database healthy."
 podman cp scripts/configure_wallet.sh db:/tmp/configure_wallet.sh
+podman cp scripts/open_wallet.sh db:/opt/oracle/scripts/startup/open_wallet.sh
 podman cp scripts/create_user.sh db:/tmp/create_user.sh
 
 echo "Configure wallet for TDE"
