@@ -50,7 +50,7 @@ podman create \
   -v "ordsconfig:/etc/ords/config" \
   -v "ordsinit:/ords-entrypoint.d" \
   --restart on-failure:200 \
-  container-registry.oracle.com/database/ords
+  container-registry.oracle.com/database/ords-developer
 
 podman cp conn_string.txt ords:/opt/oracle/variables/conn_string.txt
 rm conn_string.txt
