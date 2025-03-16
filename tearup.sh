@@ -60,7 +60,7 @@ podman cp scripts/ords_config.sh ords:/ords-entrypoint.d
 
 podman container start db
 
-echo "Waiting for DB to become healthy before staring ORDS."
+echo "Waiting for DB to become healthy before starting ORDS."
 
 healthStatus=$(curl -s --unix-socket "$XDG_RUNTIME_DIR/podman/podman.sock" http://localhost/v4.0.0/libpod/containers/db/json | jq -r '.State.Health.Status')
 healthStatus=$(podman inspect db --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}")
