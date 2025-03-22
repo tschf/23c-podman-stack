@@ -1,0 +1,11 @@
+name: Build Test
+run-name: Test rebuild of stack by ${{ github.actor }} on branch ${{ github.ref_name }}
+on: [push]
+jobs:
+  db-setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout files
+        uses: actions/checkout@v4
+      - name: images
+        run: ./images.sh
