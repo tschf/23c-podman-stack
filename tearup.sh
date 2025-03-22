@@ -7,9 +7,9 @@ set -e
 # Create two random passwords. One for sys/dba account; And another for an initial
 # app development schema "devver". Workspace (APP_DEV) will be created and assigned
 # a devver user with the same password
-pwgen 16 1 | tr -d '\n' | podman secret create ORACLE_PWD -
-pwgen 16 1 | tr -d '\n' | podman secret create DEVVER_PWD -
-pwgen 16 1 | tr -d '\n' | podman secret create KEYSTORE_PWD -
+printf "pw##%s" "$(openssl rand -hex 8)" | podman secret create ORACLE_PWD -
+printf "pw##%s" "$(openssl rand -hex 8)" | podman secret create DEVVER_PWD -
+printf "pw##%s" "$(openssl rand -hex 8)" | podman secret create KEYSTORE_PWD -
 
 oraclePwdSecretInfo=$(podman secret inspect ORACLE_PWD)
 oraclePwdSecretId=$(echo "$oraclePwdSecretInfo" | jq -r '.[0].ID')
